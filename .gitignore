@@ -30,3 +30,4 @@ yarn-error.log*
 # source images (originaux lourds — convertis vers public/img via npm run optimize:images)
 /_source-images
 .vercel
+.env*

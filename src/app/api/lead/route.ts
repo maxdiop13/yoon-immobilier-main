@@ -1,23 +1,55 @@
 import { NextResponse } from "next/server";
-
-/**
- * Endpoint de réception des formulaires — configurable par variable d'environnement.
- *
- * - Si FORM_WEBHOOK_URL est défini : on relaie la soumission (POST JSON aplati) vers ce
- *   webhook — compatible Make / Zapier / Airtable / Google Sheet / n8n / CRM.
- *   En-tête Authorization optionnel via FORM_WEBHOOK_TOKEN.
- * - Sinon : on renvoie `ok:false` avec un message clair (jamais d'échec silencieux,
- *   jamais de redirection vers /merci). L'utilisateur est invité à passer par WhatsApp.
- *
- * Champs transmis (aplatis) : prenom, email, whatsapp/telephone, pays/residence,
- * projet, budget, delai, + source, page, receivedAt (timestamp ISO), formType.
- */
+import { Resend } from "resend";
 
 const MAX_FIELD = 4000;
 
 function sanitize(value: unknown): string {
   if (typeof value !== "string") return "";
   return value.slice(0, MAX_FIELD).trim();
+}
+
+const FIELD_LABELS: Record<string, string> = {
+  prenom: "Prénom",
+  email: "Email",
+  whatsapp: "WhatsApp",
+  telephone: "Téléphone",
+  pays: "Pays",
+  residence: "Résidence",
+  projet: "Projet",
+  budget: "Budget",
+  delai: "Délai",
+  message: "Message",
+  source: "Source",
+  formType: "Formulaire",
+  page: "Page",
+  receivedAt: "Reçu le",
+};
+
+function buildEmailHtml(payload: Record<string, string>): string {
+  const rows = Object.entries(payload)
+    .filter(([, v]) => v)
+    .map(([k, v]) => {
+      const label = FIELD_LABELS[k] ?? k;
+      return `<tr><td style="padding:6px 12px;font-weight:600;color:#374151;white-space:nowrap;vertical-align:top;">${label}</td><td style="padding:6px 12px;color:#111827;">${v}</td></tr>`;
+    })
+    .join("");
+
+  const sourceLabel = payload.source ?? payload.formType ?? "Formulaire";
+
+  return `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f9fafb;padding:32px;">
+  <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;">
+    <div style="background:#1a3a2a;padding:20px 24px;">
+      <p style="margin:0;color:#fff;font-size:18px;font-weight:700;">YOoN Immobilier — Nouveau lead</p>
+      <p style="margin:4px 0 0;color:#a7c4b5;font-size:14px;">${sourceLabel}</p>
+    </div>
+    <table style="width:100%;border-collapse:collapse;">
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="padding:16px 24px;background:#f9fafb;border-top:1px solid #e5e7eb;">
+      <p style="margin:0;font-size:12px;color:#9ca3af;">Envoyé depuis www.yoon.immo</p>
+    </div>
+  </div>
+</body></html>`;
 }
 
 export async function POST(request: Request) {
@@ -32,7 +64,6 @@ export async function POST(request: Request) {
   const page = sanitize(body.page);
   const rawData = body.data && typeof body.data === "object" ? body.data : {};
 
-  // Honeypot serveur : si rempli, on répond OK sans rien transmettre.
   if (sanitize(rawData["company_website"])) {
     return NextResponse.json({ ok: true });
   }
@@ -49,8 +80,7 @@ export async function POST(request: Request) {
       ? "diagnostic"
       : formType;
 
-  // Payload aplati (lisible par Google Sheet / Airtable / Make sans transformation).
-  const payload = {
+  const payload: Record<string, string> = {
     source,
     formType,
     page,
@@ -58,36 +88,42 @@ export async function POST(request: Request) {
     ...data,
   };
 
-  const webhook = process.env.FORM_WEBHOOK_URL;
-
-  if (webhook) {
-    try {
+  const results = await Promise.allSettled([
+    // Webhook Make (best-effort)
+    (async () => {
+      const webhook = process.env.FORM_WEBHOOK_URL;
+      if (!webhook) return;
       const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (process.env.FORM_WEBHOOK_TOKEN) {
-        headers["Authorization"] = `Bearer ${process.env.FORM_WEBHOOK_TOKEN}`;
-      }
-      const res = await fetch(webhook, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(payload),
-      });
+      if (process.env.FORM_WEBHOOK_TOKEN) headers["Authorization"] = `Bearer ${process.env.FORM_WEBHOOK_TOKEN}`;
+      const res = await fetch(webhook, { method: "POST", headers, body: JSON.stringify(payload) });
       if (!res.ok) throw new Error(`Webhook status ${res.status}`);
-      return NextResponse.json({ ok: true });
-    } catch {
-      return NextResponse.json(
-        { ok: false, error: "Service d'envoi momentanément indisponible. Réessaie ou écris-nous sur WhatsApp." },
-        { status: 502 }
-      );
-    }
+    })(),
+
+    // Email Resend (best-effort)
+    (async () => {
+      const apiKey = process.env.RESEND_API_KEY;
+      const to = process.env.NOTIFICATION_EMAIL;
+      if (!apiKey || !to) return;
+      const resend = new Resend(apiKey);
+      const subject = `Nouveau lead ${source} — ${data.prenom || "inconnu"} (${data.pays || ""})`;
+      await resend.emails.send({
+        from: "YOoN Immobilier <onboarding@resend.dev>",
+        to,
+        subject,
+        html: buildEmailHtml(payload),
+      });
+    })(),
+  ]);
+
+  // Succès si au moins une des deux livraisons a fonctionné
+  const anySuccess = results.some((r) => r.status === "fulfilled");
+
+  if (anySuccess) {
+    return NextResponse.json({ ok: true });
   }
 
-  // Pas de webhook configuré : message clair, pas d'échec silencieux, pas de redirection.
   return NextResponse.json(
-    {
-      ok: false,
-      error:
-        "On ne peut pas encore enregistrer ta demande en ligne. Écris-nous directement sur WhatsApp — on te répond tout de suite.",
-    },
-    { status: 503 }
+    { ok: false, error: "Service d'envoi momentanément indisponible. Réessaie ou écris-nous sur WhatsApp." },
+    { status: 502 }
   );
 }
