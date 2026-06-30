@@ -6,7 +6,7 @@ import { useLeadForm, SuccessPanel, ErrorBanner, SubmitButton } from "./submit";
 
 /**
  * Lead magnet — « Guide gratuit : Investir au Sénégal sans te faire avoir ».
- * Champs : prénom, email, pays de résidence, type de projet.
+ * Champs : prénom, email, whatsapp (optionnel), pays de résidence, type de projet.
  */
 export function GuideForm() {
   const { status, message, submit, notifyStart } = useLeadForm("guide-diaspora", {
@@ -30,7 +30,7 @@ export function GuideForm() {
     if (Object.keys(next).length) return;
 
     await submit(
-      { prenom, email, pays: get("pays"), projet: get("projet") },
+      { prenom, email, whatsapp: get("whatsapp"), pays: get("pays"), projet: get("projet") },
       get("company_website")
     );
   }
@@ -55,6 +55,18 @@ export function GuideForm() {
         <Field label="Email" name="email" required error={errors.email}>
           {(p) => <TextInput {...p} type="email" autoComplete="email" placeholder="prenom@email.com" />}
         </Field>
+      </div>
+      <Field label="WhatsApp" name="whatsapp">
+        {(p) => (
+          <TextInput
+            {...p}
+            type="tel"
+            autoComplete="tel"
+            placeholder="+33 6 12 34 56 78 ou +221 77 xxx xx xx"
+          />
+        )}
+      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Pays de résidence" name="pays">
           {(p) => <TextInput {...p} type="text" autoComplete="country-name" placeholder="France, Belgique…" />}
         </Field>

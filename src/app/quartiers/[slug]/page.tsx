@@ -141,7 +141,7 @@ export default async function QuartierPage({
   if (!q) notFound();
 
   const wa = whatsappHref(
-    `Bonjour YOoN, je voudrais en savoir plus sur le quartier ${q.nom} à Dakar.`
+    `Bonjour YOoN, je m'intéresse au quartier ${q.nom} à Dakar. Pouvez-vous m'en dire plus ?`
   );
 
   return (
