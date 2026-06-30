@@ -107,7 +107,7 @@ export async function POST(request: Request) {
       const resend = new Resend(apiKey);
       const subject = `Nouveau lead ${source} — ${data.prenom || "inconnu"} (${data.pays || ""})`;
       await resend.emails.send({
-        from: "YOoN Immobilier <onboarding@resend.dev>",
+        from: "YOoN Immobilier <noreply@yoon.immo>",
         to,
         subject,
         html: buildEmailHtml(payload),
