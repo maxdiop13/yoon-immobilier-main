@@ -59,7 +59,7 @@ export default function PolitiquePage() {
         <p>
           Tes données sont accessibles à l&apos;équipe YOoN et, le cas échéant, à nos
           sous-traitants techniques (hébergement, service d&apos;envoi de formulaires/email) :{" "}
-          <Todo>lister les outils utilisés (ex. Resend, Make, CRM…)</Todo>. Ces prestataires
+          Vercel (hébergement), Make.com (automatisation formulaires), Google Sheets (stockage leads). Ces prestataires
           n&apos;utilisent pas tes données à d&apos;autres fins.
         </p>
       </section>
@@ -68,7 +68,7 @@ export default function PolitiquePage() {
         <h2>Durée de conservation</h2>
         <p>
           Les données sont conservées le temps nécessaire au traitement de ta demande, puis
-          archivées ou supprimées : <Todo>durée de conservation (ex. 3 ans après dernier contact)</Todo>.
+          archivées ou supprimées : [DUREE_A_CONFIRMER].
         </p>
       </section>
 
@@ -77,7 +77,7 @@ export default function PolitiquePage() {
         <p>
           Conformément au RGPD (et où il s&apos;applique), tu disposes d&apos;un droit
           d&apos;accès, de rectification, d&apos;effacement, d&apos;opposition et de portabilité de
-          tes données. Pour les exercer, écris-nous à <Todo>email de contact</Todo>. Tu peux aussi
+          tes données. Pour les exercer, écris-nous à [EMAIL_A_CONFIRMER]. Tu peux aussi
           introduire une réclamation auprès de l&apos;autorité compétente (ex. CNIL en France).
         </p>
       </section>
