@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LegalPage, Todo } from "@/components/LegalPage";
+import { LegalPage } from "@/components/LegalPage";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ export default function PolitiquePage() {
       eyebrow="Tes données, ta tranquillité"
       title="Politique de confidentialité"
       intro="On collecte le strict nécessaire pour te répondre, rien de plus. Voici comment tes données sont traitées."
-      updated={<Todo>date</Todo>}
+      updated="1er juillet 2026"
     >
       <section>
         <h2>Responsable du traitement</h2>
@@ -59,7 +59,8 @@ export default function PolitiquePage() {
         <p>
           Tes données sont accessibles à l&apos;équipe YOoN et, le cas échéant, à nos
           sous-traitants techniques (hébergement, service d&apos;envoi de formulaires/email) :{" "}
-          Vercel (hébergement), Make.com (automatisation formulaires), Google Sheets (stockage leads). Ces prestataires
+          Vercel (hébergement, États-Unis — Privacy Shield), Make.com (automatisation, UE),
+          Google Sheets (stockage leads, États-Unis — Privacy Shield). Ces prestataires
           n&apos;utilisent pas tes données à d&apos;autres fins.
         </p>
       </section>
@@ -68,7 +69,7 @@ export default function PolitiquePage() {
         <h2>Durée de conservation</h2>
         <p>
           Les données sont conservées le temps nécessaire au traitement de ta demande, puis
-          archivées ou supprimées : [DUREE_A_CONFIRMER].
+          archivées ou supprimées : 3 ans après le dernier contact.
         </p>
       </section>
 
@@ -77,7 +78,8 @@ export default function PolitiquePage() {
         <p>
           Conformément au RGPD (et où il s&apos;applique), tu disposes d&apos;un droit
           d&apos;accès, de rectification, d&apos;effacement, d&apos;opposition et de portabilité de
-          tes données. Pour les exercer, écris-nous à [EMAIL_A_CONFIRMER]. Tu peux aussi
+          tes données. Pour les exercer, écris-nous à{" "}
+          <a href="mailto:contact@yoon.immo">contact@yoon.immo</a>. Tu peux aussi
           introduire une réclamation auprès de l&apos;autorité compétente (ex. CNIL en France).
         </p>
       </section>
@@ -86,9 +88,8 @@ export default function PolitiquePage() {
         <h2>Cookies</h2>
         <p>
           Ce site n&apos;utilise pas de cookie publicitaire ni de traceur tiers à des fins de
-          ciblage. Si des outils de mesure d&apos;audience sont ajoutés ultérieurement, cette
-          politique sera mise à jour et un bandeau de consentement sera affiché :{" "}
-          <Todo>préciser les outils de mesure éventuels</Todo>.
+          ciblage. Aucun outil de mesure d&apos;audience n&apos;est actif à ce jour. Cette politique
+          sera mise à jour et un bandeau de consentement sera affiché si de tels outils sont ajoutés.
         </p>
       </section>
     </LegalPage>
